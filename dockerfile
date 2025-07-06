@@ -220,6 +220,7 @@ RUN mkdir -p /slurm-debs && \
         find /slurm-debs -type f -name '*.deb' ! -name "*_${debver}_*.deb" -delete; \
     fi
 
+RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y)
 
 # --- 10. Configure Autologin based on DISABLE_AUTOLOGIN ---
 RUN if [ "$DISABLE_AUTOLOGIN" != "true" ]; then \
