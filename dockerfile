@@ -193,7 +193,7 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
         [ -e /dev/nvidia0 ] || mknod -m 666 /dev/nvidia0 c 195 0 && \
         [ -e /dev/nvidiactl ] || mknod -m 666 /dev/nvidiactl c 195 255 && \
         [ -e /dev/nvidia-uvm ] || mknod -m 666 /dev/nvidia-uvm c 243 0 && \
-        [ -e /dev/nvidia-uvm-tools ] || mknod -m 666 /dev/nvidia-uvm-tools c 243 1 
+        [ -e /dev/nvidia-uvm-tools ] || mknod -m 666 /dev/nvidia-uvm-tools c 243 1 ; \
     fi
 
 # --- 9. Prepare Slurm DEBs ---
