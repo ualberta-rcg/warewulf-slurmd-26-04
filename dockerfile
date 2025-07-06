@@ -120,12 +120,7 @@ RUN apt-get update && apt-get install -y \
     rrdtool \
     lua5.3 \
     dkms \
-    at-spi2-common \
-    libaec0 libatk1.0-0t64 libb64-0d \
-    libcairo-gobject2 libcups2t64 libgail-common libgail18t64 libgdk-pixbuf-2.0-0 \
-    libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgtk2.0-0t64 libgtk2.0-bin libgtk2.0-common \
-    libhdf5-103-1t64 libhdf5-hl-100t64 libipmimonitoring6 libjwt2 librdkafka1 \
-    librsvg2-2 librsvg2-common libswitch-perl libsz2 munge \
+    munge \
     linux-image-${KERNEL_VERSION} \
     linux-headers-${KERNEL_VERSION} \
     linux-modules-${KERNEL_VERSION} \
@@ -223,6 +218,16 @@ RUN mkdir -p /slurm-debs && \
         echo "🧹 Keeping only *_${debver}_*.deb packages..." && \
         find /slurm-debs -type f -name '*.deb' ! -name "*_${debver}_*.deb" -delete; \
     fi
+
+# Keep only .debs that match the wanted packages
+RUN for pkg in slurm-smd slurm-smd-slurmd slurm-smd-client \
+               slurm-smd-libpmi0 slurm-smd-libpmi2-0 \
+               slurm-smd-libnss-slurm slurm-smd-libpam-slurm-adopt \
+               slurm-smd-doc; do \
+        mv /slurm-debs/$pkg* /tmp/keep-debs/ 2>/dev/null || true; \
+    done && \
+    rm -rf /slurm-debs && \
+    mv /tmp/keep-debs /slurm-debs
 
 RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y) 
 
