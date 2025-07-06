@@ -66,7 +66,6 @@ RUN apt-get update && apt-get install -y \
     ethtool \
     ipset \
     iptables \
-    chrony \
     tcpdump \
     strace \
     lsof \
@@ -260,6 +259,13 @@ RUN update-initramfs -u -k "$KERNEL_VERSION"
 	
 # --- 13. Final Cleanup ---
 RUN apt-get purge -y \
+        linux-headers-6.8.0-63 \
+        linux-headers-6.8.0-63-generic \
+        linux-modules-extra-6.8.0-63-generic \
+        openscap-common \
+        python-babel-localedata \
+        humanity-icon-theme \
+        iso-codes \
         cmake \
         libtool \
         zlib1g-dev \
@@ -282,6 +288,7 @@ RUN apt-get purge -y \
         /tmp/* \
         /var/tmp/* \
         /var/log/* \
+        /lib/modules/*/build \
         /build \
         /slurm-debs \
         /var/log/apt/* \
