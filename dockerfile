@@ -155,16 +155,6 @@ RUN rm -rf /usr/share/xml/scap/ssg/content && \
     apt-get remove -y openscap-scanner libopenscap25t64 && \
     apt-get autoremove -y 
 
-# --- 3. Temporarily disable service configuration ---
-RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
-
-# --- 4. Create fake systemctl for environments without systemd ---
-RUN mkdir -p /tmp/bin && \
-    cp /usr/bin/systemctl /usr/bin/systemctl.bak && \
-    echo '#!/bin/sh\nexit 0' > /tmp/bin/systemctl && \
-    chmod +x /tmp/bin/systemctl && \
-    ln -sf /tmp/bin/systemctl /usr/bin/systemctl
-
 # --- 8. Install NVIDIA Driver if enabled ---
 RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
         apt-get update && apt-get install -y \
@@ -208,6 +198,16 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
 
 # --- 9. Prepare Slurm DEBs ---
 COPY slurm-debs/*.deb /slurm-debs/
+
+# --- 3. Temporarily disable service configuration ---
+RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
+# --- 4. Create fake systemctl for environments without systemd ---
+RUN mkdir -p /tmp/bin && \
+    cp /usr/bin/systemctl /usr/bin/systemctl.bak && \
+    echo '#!/bin/sh\nexit 0' > /tmp/bin/systemctl && \
+    chmod +x /tmp/bin/systemctl && \
+    ln -sf /tmp/bin/systemctl /usr/bin/systemctl
 
 RUN mkdir -p /slurm-debs && \
     if [ "$SLURM_VERSION" != "0" ]; then \
