@@ -127,19 +127,7 @@ RUN apt-get update && apt-get install -y \
     linux-modules-${KERNEL_VERSION} \
     linux-modules-extra-${KERNEL_VERSION} && \
     ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
-    systemd-tmpfiles --create --prefix /var/log/journal && \
-    echo "$KERNEL_VERSION" > /kernel_version.txt && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* 
-
-# --- 3. Temporarily disable service configuration ---
-RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
-
-# --- 4. Create fake systemctl for environments without systemd ---
-RUN mkdir -p /tmp/bin && \
-    cp /usr/bin/systemctl /usr/bin/systemctl.bak && \
-    echo '#!/bin/sh\nexit 0' > /tmp/bin/systemctl && \
-    chmod +x /tmp/bin/systemctl && \
-    ln -sf /tmp/bin/systemctl /usr/bin/systemctl
+    systemd-tmpfiles --create --prefix /var/log/journal
 
 # --- 5. Fetch and Apply SCAP Security Guide Remediation ---
 RUN export SSG_VERSION=$(curl -s https://api.github.com/repos/ComplianceAsCode/content/releases/latest | grep -oP '"tag_name": "\K[^"]+' || echo "0.1.66") && \
@@ -165,9 +153,17 @@ RUN export SSG_VERSION=$(curl -s https://api.github.com/repos/ComplianceAsCode/c
 # --- 6. Clean up SCAP content and scanner ---
 RUN rm -rf /usr/share/xml/scap/ssg/content && \
     apt-get remove -y openscap-scanner libopenscap25t64 && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get autoremove -y 
+
+# --- 3. Temporarily disable service configuration ---
+RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
+# --- 4. Create fake systemctl for environments without systemd ---
+RUN mkdir -p /tmp/bin && \
+    cp /usr/bin/systemctl /usr/bin/systemctl.bak && \
+    echo '#!/bin/sh\nexit 0' > /tmp/bin/systemctl && \
+    chmod +x /tmp/bin/systemctl && \
+    ln -sf /tmp/bin/systemctl /usr/bin/systemctl
 
 # --- 8. Install NVIDIA Driver if enabled ---
 RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
@@ -207,17 +203,7 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
         [ -e /dev/nvidia0 ] || mknod -m 666 /dev/nvidia0 c 195 0 && \
         [ -e /dev/nvidiactl ] || mknod -m 666 /dev/nvidiactl c 195 255 && \
         [ -e /dev/nvidia-uvm ] || mknod -m 666 /dev/nvidia-uvm c 243 0 && \
-        [ -e /dev/nvidia-uvm-tools ] || mknod -m 666 /dev/nvidia-uvm-tools c 243 1 && \
-        apt-get purge -y \
-            build-essential \
-            pkg-config \
-            xorg-dev \
-            libx11-dev \
-            libxext-dev \
-            libglvnd-dev && \
-        apt-get autoremove -y && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/* /tmp/* /build; \
+        [ -e /dev/nvidia-uvm-tools ] || mknod -m 666 /dev/nvidia-uvm-tools c 243 1 
     fi
 
 # --- 9. Prepare Slurm DEBs ---
@@ -272,6 +258,10 @@ RUN rm -f /usr/bin/systemctl && \
         bpfcc-tools \
         pkg-config \
         build-essential \
+        xorg-dev \
+        libx11-dev \
+        libxext-dev \
+        libglvnd-dev\
         gettext && \
     apt-get autoremove -y && \
     apt-get clean && \
