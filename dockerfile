@@ -133,6 +133,9 @@ RUN apt-get update && apt-get install -y \
     linux-modules-extra-${KERNEL_VERSION} && \
     ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
     mkdir -p /var/log/journal && \
+    mkdir -p /var/log/munge && \
+    mkdir -p /var/log/slurm && \
+    chown -R munge:munge /var/log/munge && \
     systemd-tmpfiles --create --prefix /var/log/journal && \
     systemctl mask \
       systemd-udevd.service \
@@ -225,7 +228,8 @@ RUN mkdir -p /slurm-debs && \
         find /slurm-debs -type f -name '*.deb' ! -name "*_${debver}_*.deb" -delete; \
     fi
 
-RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y)
+RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y) && \
+    chown -R slurm:slurm /var/log/slurm 
 
 # --- 10. Configure Autologin based on DISABLE_AUTOLOGIN ---
 RUN if [ "$DISABLE_AUTOLOGIN" != "true" ]; then \
