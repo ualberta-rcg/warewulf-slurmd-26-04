@@ -42,7 +42,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     vim \
-    tmux \
     less \
     htop \
     sysstat \
@@ -50,8 +49,6 @@ RUN apt-get update && apt-get install -y \
     ipmitool \
     smartmontools \
     lm-sensors \
-    python3 \
-    python3-pip \
     netplan.io \
     unzip \
     gnupg \
@@ -77,7 +74,6 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     lsb-release \
     bash-completion \
-    open-iscsi \
     bpfcc-tools \
     cgroup-tools \
     auditd \
@@ -124,12 +120,12 @@ RUN apt-get update && apt-get install -y \
     rrdtool \
     lua5.3 \
     dkms \
-    adwaita-icon-theme at-spi2-common gtk-update-icon-cache hicolor-icon-theme humanity-icon-theme \
-    libaec0 libatk1.0-0t64 libavahi-client3 libavahi-common-data libavahi-common3 libb64-0d \
+    at-spi2-common \
+    libaec0 libatk1.0-0t64 libb64-0d \
     libcairo-gobject2 libcups2t64 libgail-common libgail18t64 libgdk-pixbuf-2.0-0 \
     libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgtk2.0-0t64 libgtk2.0-bin libgtk2.0-common \
-    libhdf5-103-1t64 libhdf5-hl-100t64 libipmimonitoring6 libjwt2 libmysqlclient21 librdkafka1 \
-    librsvg2-2 librsvg2-common libswitch-perl libsz2 munge mysql-common ubuntu-mono \
+    libhdf5-103-1t64 libhdf5-hl-100t64 libipmimonitoring6 libjwt2 librdkafka1 \
+    librsvg2-2 librsvg2-common libswitch-perl libsz2 munge \
     linux-image-${KERNEL_VERSION} \
     linux-headers-${KERNEL_VERSION} \
     linux-modules-${KERNEL_VERSION} \
@@ -263,9 +259,8 @@ RUN update-initramfs -u -k "$KERNEL_VERSION"
 # --- 13. Final Cleanup ---
 RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
     apt-get purge -y \
-        linux-headers-6.8.0-63 \
-        linux-headers-6.8.0-63-generic \
-        linux-modules-extra-6.8.0-63-generic \
+        linux-headers-* \
+        linux-modules-extra-* \
         openscap-common \
         python-babel-localedata \
         humanity-icon-theme \
@@ -283,6 +278,7 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         xorg-dev \
         libx11-dev \
         libxext-dev \
+        initramfs-tools \
         gettext && \
     apt-get autoremove -y && \
     apt-get clean && \
