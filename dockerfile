@@ -24,7 +24,7 @@ RUN groupadd -g 1001 wwgroup && \
 
 # --- 4. Create Slurm user accounts ---
 RUN groupadd -r -g 999 slurm && \
-    useradd -r -u 999 -g slurm -s /bin/false slurm && \
+    useradd -r -u 999 -g slurm -s /bin/false slurm 
 
 # --- 5. Install Core Tools, Debugging, and Dependencies ---
 RUN apt-get update && apt-get install -y \
