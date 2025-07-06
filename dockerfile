@@ -133,9 +133,6 @@ RUN apt-get update && apt-get install -y \
     linux-modules-extra-${KERNEL_VERSION} && \
     ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
     mkdir -p /var/log/journal && \
-    mkdir -p /var/log/munge /etc/munge && \
-    mkdir -p /var/log/slurm && \
-    chown -R munge:munge /var/log/munge && \
     systemd-tmpfiles --create --prefix /var/log/journal && \
     systemctl mask \
       systemd-udevd.service \
@@ -292,7 +289,6 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /var/lib/apt/lists/* \
         /tmp/* \
         /var/tmp/* \
-        /var/log/* \
         /lib/modules/*/build \
         /build \
         /slurm-debs \
@@ -306,6 +302,7 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /root/.cache \
         /root/.wget-hsts && \
     find / -name '*.bash_history' -delete && \
+    find /var/log/ -type f -exec rm -f {} + && \
     find / -name '.wget-hsts' -delete && \
     find / -name '.cache' -exec rm -rf {} +
 
