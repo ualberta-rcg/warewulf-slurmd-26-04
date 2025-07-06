@@ -133,7 +133,7 @@ RUN apt-get update && apt-get install -y \
     linux-modules-extra-${KERNEL_VERSION} && \
     ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
     mkdir -p /var/log/journal && \
-    mkdir -p /var/log/munge && \
+    mkdir -p /var/log/munge /etc/munge && \
     mkdir -p /var/log/slurm && \
     chown -R munge:munge /var/log/munge && \
     systemd-tmpfiles --create --prefix /var/log/journal && \
