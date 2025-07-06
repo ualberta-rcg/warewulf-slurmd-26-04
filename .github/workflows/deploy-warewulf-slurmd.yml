@@ -11,7 +11,7 @@ on:
         required: false
         default: '0'
       KERNEL_VERSION_OVERRIDE:
-        description: 'Specific kernel version to install (e.g., 6.8.0-31-generic). Use "0" for latest.'
+        description: 'Specific kernel version (e.g., 6.8.0-31-generic). Use "0" or "none" for default kernel.'
         required: false
         default: '0'
       DISABLE_AUTOLOGIN:
