@@ -221,21 +221,27 @@ jobs:
         id: taggen
         run: |
           SLURM_VER="${{ steps.config.outputs.SLURM_VERSION }}"
-          KERNEL_VER="${{ steps.config.outputs.KERNEL_VERSION }}"
+          KERNEL_VER_RAW="${{ steps.config.outputs.KERNEL_VERSION }}"
           NVIDIA_ENABLED="${{ steps.config.outputs.NVIDIA_INSTALL_ENABLED }}"
           NVIDIA_URL="${{ steps.config.outputs.NVIDIA_DRIVER_URL }}"
 
-          # Slugify
+          # Slugify Slurm version
           SLURM_VER=$(echo "$SLURM_VER" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
-          KERNEL_VER=$(echo "U24.04-$KERNEL_VER" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
 
-          TAG_NAME="${KERNEL_VER}-${SLURM_VER}"
+          # If kernel is "none", skip kernel/NVIDIA parts
+          if [ "$KERNEL_VER_RAW" = "none" ]; then
+            TAG_NAME="slurm-${SLURM_VER}"
+            echo "🔖 Kernel version is 'none'; skipping kernel and NVIDIA from tag."
+          else
+            KERNEL_VER=$(echo "U24.04-$KERNEL_VER_RAW" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
+            TAG_NAME="${KERNEL_VER}-slurm-${SLURM_VER}"
 
-          if [ "$NVIDIA_ENABLED" = "true" ]; then
-            # Extract version from URL: NVIDIA-Linux-x86_64-570.148.08.run
-            NVIDIA_VER=$(basename "$NVIDIA_URL" | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
-            NVIDIA_VER=$(echo "$NVIDIA_VER" | tr '.' '-')  # slugify
-            TAG_NAME="${TAG_NAME}-${NVIDIA_VER}"
+            if [ "$NVIDIA_ENABLED" = "true" ]; then
+              # Extract version from URL: NVIDIA-Linux-x86_64-570.148.08.run
+              NVIDIA_VER=$(basename "$NVIDIA_URL" | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
+              NVIDIA_VER=$(echo "$NVIDIA_VER" | tr '.' '-')  # slugify
+              TAG_NAME="${TAG_NAME}-${NVIDIA_VER}"
+            fi
           fi
 
           echo "Generated TAG_NAME: $TAG_NAME"
