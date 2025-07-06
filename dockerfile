@@ -127,7 +127,21 @@ RUN apt-get update && apt-get install -y \
     linux-modules-${KERNEL_VERSION} \
     linux-modules-extra-${KERNEL_VERSION} && \
     ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
-    systemd-tmpfiles --create --prefix /var/log/journal
+    mkdir -p /var/log/journal && \
+    systemd-tmpfiles --create --prefix /var/log/journal && \
+    systemctl mask \
+      systemd-udevd.service \
+      systemd-udevd-kernel.socket \
+      systemd-udevd-control.socket \
+      systemd-modules-load.service \
+      sys-kernel-config.mount \
+      sys-kernel-debug.mount \
+      sys-fs-fuse-connections.mount \
+      systemd-remount-fs.service \
+      getty.target \
+      systemd-logind.service \
+      systemd-vconsole-setup.service \
+      systemd-timesyncd.service
 
 # --- 5. Fetch and Apply SCAP Security Guide Remediation ---
 RUN export SSG_VERSION=$(curl -s https://api.github.com/repos/ComplianceAsCode/content/releases/latest | grep -oP '"tag_name": "\K[^"]+' || echo "0.1.66") && \
@@ -199,16 +213,6 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
 # --- 9. Prepare Slurm DEBs ---
 COPY slurm-debs/*.deb /slurm-debs/
 
-# --- 3. Temporarily disable service configuration ---
-RUN echo '#!/bin/sh\nexit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
-
-# --- 4. Create fake systemctl for environments without systemd ---
-RUN mkdir -p /tmp/bin && \
-    cp /usr/bin/systemctl /usr/bin/systemctl.bak && \
-    echo '#!/bin/sh\nexit 0' > /tmp/bin/systemctl && \
-    chmod +x /tmp/bin/systemctl && \
-    ln -sf /tmp/bin/systemctl /usr/bin/systemctl
-
 RUN mkdir -p /slurm-debs && \
     if [ "$SLURM_VERSION" != "0" ]; then \
         debver=$(echo "$SLURM_VERSION" | sed 's/^\([0-9]*\)-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)$/\1.\2.\3-\4/') && \
@@ -238,15 +242,18 @@ RUN chmod +x /usr/local/sbin/firstboot.sh && \
         rm -f /etc/systemd/system/multi-user.target.wants/firstboot.service; \
     fi
 
+RUN systemctl enable \
+    slurmd.service \
+    munge.service \
+    rsyslog.service \
+    ssh.service \
+    auditd.service
+
 # --- 12. Generate Initramfs for Selected Kernel ---
 RUN update-initramfs -u -k "$KERNEL_VERSION"
 	
 # --- 13. Final Cleanup ---
-RUN rm -f /usr/bin/systemctl && \
-    rm -rf /tmp/bin && \
-    [ -f /usr/bin/systemctl.bak ] && mv /usr/bin/systemctl.bak /usr/bin/systemctl || true && \
-    rm -f /usr/sbin/policy-rc.d && \
-    apt-get purge -y \
+RUN apt-get purge -y \
         cmake \
         libtool \
         zlib1g-dev \
