@@ -14,16 +14,19 @@ ARG FIRSTBOOT_ENABLED
 # --- 0. Set root user ---
 USER root
 
-# --- 2. Set root and user accounts ---
-RUN echo "root:changeme" | chpasswd && \
-    groupadd -r -g 999 slurm && \
-    useradd -r -u 999 -g slurm -s /bin/false slurm && \
-    groupadd -g 1001 wwgroup && \
-    useradd -m -u 1001 -d /local/home/wwuser -g wwgroup -s /bin/bash wwuser && \
-    echo "wwuser:wwpassword" | chpasswd && \
-    usermod -aG sudo wwuser
+# --- 2. Set root password ---
+RUN echo "root:changeme" | chpasswd
 
-# --- 1. Install Core Tools, Debugging, and Dependencies ---
+# --- 3. Create wwuser user accounts ---
+RUN groupadd -g 1001 wwgroup && \
+    useradd -u 1001 -m -d /local/home/wwuser -g wwgroup -G sudo -s /bin/bash wwuser && \
+    echo "wwuser:wwpassword" | chpasswd
+
+# --- 4. Create Slurm user accounts ---
+RUN groupadd -r -g 999 slurm && \
+    useradd -r -u 999 -g slurm -s /bin/false slurm && \
+
+# --- 5. Install Core Tools, Debugging, and Dependencies ---
 RUN apt-get update && apt-get install -y \
     sudo \
     openssh-server \
@@ -225,8 +228,7 @@ RUN mkdir -p /slurm-debs && \
         find /slurm-debs -type f -name '*.deb' ! -name "*_${debver}_*.deb" -delete; \
     fi
 
-RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y) && \
-    chown -R slurm:slurm /var/log/slurm 
+RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y) 
 
 # --- 10. Configure Autologin based on DISABLE_AUTOLOGIN ---
 RUN if [ "$DISABLE_AUTOLOGIN" != "true" ]; then \
@@ -300,7 +302,8 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /usr/share/info \
         /NVIDI* \
         /root/.cache \
-        /root/.wget-hsts && \
+        /root/.wget-hsts \
+        /run/slurm/conf && \
     find / -name '*.bash_history' -delete && \
     find /var/log/ -type f -exec rm -f {} + && \
     find / -name '.wget-hsts' -delete && \
