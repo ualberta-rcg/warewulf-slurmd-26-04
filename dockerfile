@@ -258,7 +258,8 @@ RUN systemctl enable \
 RUN update-initramfs -u -k "$KERNEL_VERSION"
 	
 # --- 13. Final Cleanup ---
-RUN apt-get purge -y \
+RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
+    apt-get purge -y \
         linux-headers-6.8.0-63 \
         linux-headers-6.8.0-63-generic \
         linux-modules-extra-6.8.0-63-generic \
