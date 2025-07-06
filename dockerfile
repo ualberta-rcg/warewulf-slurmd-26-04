@@ -259,6 +259,11 @@ RUN update-initramfs -u -k "$KERNEL_VERSION"
 # --- 13. Final Cleanup ---
 RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
     apt-get purge -y \
+        mesa-common-dev xserver-xorg-dev xorg-dev \
+        libx*dev libgl*dev libegl*dev libgles*dev \
+        libx11-dev libxext-dev libxft-dev \
+        build-essential dkms gcc make pkg-config \
+        libfreetype-dev libpng-dev uuid-dev libexpat1-dev \
         linux-headers-* \
         linux-modules-extra-* \
         openscap-common \
@@ -268,13 +273,9 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         cmake \
         libtool \
         zlib1g-dev \
-        gcc \
-        make \
         autoconf \
         automake \
         bpfcc-tools \
-        pkg-config \
-        build-essential \
         xorg-dev \
         libx11-dev \
         libxext-dev \
