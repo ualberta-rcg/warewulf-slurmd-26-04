@@ -18,8 +18,8 @@ USER root
 RUN echo "root:changeme" | chpasswd && \
     groupadd -r -g 999 slurm && \
     useradd -r -u 999 -g slurm -s /bin/false slurm && \
-    groupadd -g 998 wwgroup && \
-    useradd -m -u 998 -d /local/home/wwuser -g wwgroup -s /bin/bash wwuser && \
+    groupadd -g 1001 wwgroup && \
+    useradd -m -u 1001 -d /local/home/wwuser -g wwgroup -s /bin/bash wwuser && \
     echo "wwuser:wwpassword" | chpasswd && \
     usermod -aG sudo wwuser
 
