@@ -250,7 +250,6 @@ RUN chmod +x /usr/local/sbin/firstboot.sh && \
     fi
 
 RUN systemctl enable \
-    slurmd.service \
     munge.service \
     rsyslog.service \
     ssh.service \
