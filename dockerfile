@@ -285,14 +285,14 @@ RUN apt-get purge -y \
         /var/tmp/* \
         /var/log/* \
         /build \
+        /slurm-debs \
         /var/log/apt/* \
         /usr/share/doc \
         /usr/share/man \
         /usr/share/locale \
         /usr/share/locale-langpack \
         /usr/share/info \
-        /usr/sbin/policy-rc.d \
-        /NVIDIA-Linux* \
+        /NVIDI* \
         /root/.cache \
         /root/.wget-hsts && \
     find / -name '*.bash_history' -delete && \
