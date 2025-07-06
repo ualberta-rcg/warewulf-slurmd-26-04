@@ -122,6 +122,12 @@ RUN apt-get update && apt-get install -y \
     rrdtool \
     lua5.3 \
     dkms \
+    adwaita-icon-theme at-spi2-common gtk-update-icon-cache hicolor-icon-theme humanity-icon-theme \
+    libaec0 libatk1.0-0t64 libavahi-client3 libavahi-common-data libavahi-common3 libb64-0d \
+    libcairo-gobject2 libcups2t64 libgail-common libgail18t64 libgdk-pixbuf-2.0-0 \
+    libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgtk2.0-0t64 libgtk2.0-bin libgtk2.0-common \
+    libhdf5-103-1t64 libhdf5-hl-100t64 libipmimonitoring6 libjwt2 libmysqlclient21 librdkafka1 \
+    librsvg2-2 librsvg2-common libswitch-perl libsz2 munge mysql-common ubuntu-mono \
     linux-image-${KERNEL_VERSION} \
     linux-headers-${KERNEL_VERSION} \
     linux-modules-${KERNEL_VERSION} \
