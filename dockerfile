@@ -271,6 +271,7 @@ RUN rm -f /usr/bin/systemctl && \
         /tmp/* \
         /var/tmp/* \
         /var/log/* \
+        /build \
         /var/log/apt/* \
         /usr/share/doc \
         /usr/share/man \
