@@ -221,7 +221,7 @@ RUN mkdir -p /slurm-debs && \
 
 # Keep only .debs that match the wanted packages
 RUN mkdir -p /tmp/keep-debs && \
-    for pkg in slurm-smd slurm-smd-slurmd slurm-smd-client \
+    for pkg in slurm-smd_ slurm-smd-slurmd slurm-smd-client \
                slurm-smd-libpmi0 slurm-smd-libpmi2-0 \
                slurm-smd-libnss-slurm slurm-smd-libpam-slurm-adopt \
                slurm-smd-doc; do \
