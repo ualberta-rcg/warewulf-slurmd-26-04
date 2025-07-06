@@ -263,7 +263,6 @@ RUN apt-get purge -y \
         cmake \
         libtool \
         zlib1g-dev \
-        liblua5.3-0 \
         gcc \
         make \
         autoconf \
@@ -274,7 +273,6 @@ RUN apt-get purge -y \
         xorg-dev \
         libx11-dev \
         libxext-dev \
-        libglvnd-dev\
         gettext && \
     apt-get autoremove -y && \
     apt-get clean && \
