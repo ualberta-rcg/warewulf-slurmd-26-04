@@ -247,7 +247,6 @@ COPY firstboot.service /etc/systemd/system/
 COPY firstboot.sh /usr/local/sbin/
 RUN if [ "$FIRSTBOOT_ENABLED" = "true" ]; then \
         chmod +x /usr/local/sbin/firstboot.sh && \
-        systemctl daemon-reload && \
         systemctl enable firstboot.service; \
     else \
         rm -f /etc/systemd/system/multi-user.target.wants/firstboot.service && \
