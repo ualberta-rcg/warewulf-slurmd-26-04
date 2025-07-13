@@ -245,12 +245,13 @@ RUN if [ "$DISABLE_AUTOLOGIN" != "true" ]; then \
 # --- 11. Configure Firstboot Service ---
 COPY firstboot.service /etc/systemd/system/
 COPY firstboot.sh /usr/local/sbin/
-RUN chmod +x /usr/local/sbin/firstboot.sh && \
-    mkdir -p /etc/systemd/system/multi-user.target.wants && \
-    if [ "$FIRSTBOOT_ENABLED" = "true" ]; then \
-        ln -s /etc/systemd/system/firstboot.service /etc/systemd/system/multi-user.target.wants/firstboot.service || true; \
+RUN if [ "$FIRSTBOOT_ENABLED" = "true" ]; then \
+        chmod +x /usr/local/sbin/firstboot.sh && \
+        systemctl daemon-reload && \
+        systemctl enable firstboot.service; \
     else \
-        rm -f /etc/systemd/system/multi-user.target.wants/firstboot.service; \
+        rm -f /etc/systemd/system/multi-user.target.wants/firstboot.service && \
+        rm -f /usr/local/sbin/firstboot.sh; \
     fi
 
 RUN systemctl enable \
