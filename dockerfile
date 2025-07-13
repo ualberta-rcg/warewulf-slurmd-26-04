@@ -306,7 +306,7 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /run/slurm/conf && \
     mkdir -p /var/spool/slurmd && \
     mkdir -p /var/log/munge && \
-    chmod munge:munge -R /var/log/munge && \
+    chown munge:munge -R /var/log/munge && \
     find / -name '*.bash_history' -delete && \
     find /var/log/ -type f -exec rm -f {} + && \
     find / -name '.wget-hsts' -delete && \
