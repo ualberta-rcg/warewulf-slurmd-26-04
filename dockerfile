@@ -288,7 +288,6 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf \
-        /usr/src/* \
         /var/lib/apt/lists/* \
         /tmp/* \
         /var/tmp/* \
