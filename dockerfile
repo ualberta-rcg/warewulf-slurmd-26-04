@@ -313,5 +313,5 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
     find / -name '.cache' -exec rm -rf {} +
 
 # --- 14. Systemd-compatible boot (Warewulf) ---
-STOPSIGNAL SIGRTMIN+3
-CMD ["/sbin/init"]
+#STOPSIGNAL SIGRTMIN+3
+#CMD ["/sbin/init"]
