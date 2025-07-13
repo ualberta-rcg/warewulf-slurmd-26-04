@@ -270,8 +270,6 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         libx11-dev libxext-dev libxft-dev \
         build-essential dkms gcc make pkg-config \
         libfreetype-dev libpng-dev uuid-dev libexpat1-dev \
-        linux-headers-* \
-        linux-modules-extra-* \
         openscap-common \
         python-babel-localedata \
         humanity-icon-theme \
@@ -294,7 +292,6 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /var/lib/apt/lists/* \
         /tmp/* \
         /var/tmp/* \
-        /lib/modules/*/build \
         /build \
         /slurm-debs \
         /var/log/apt/* \
@@ -307,10 +304,33 @@ RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
         /root/.cache \
         /root/.wget-hsts \
         /run/slurm/conf && \
+    mkdir -p /var/spool/slurmd && \
     find / -name '*.bash_history' -delete && \
     find /var/log/ -type f -exec rm -f {} + && \
     find / -name '.wget-hsts' -delete && \
     find / -name '.cache' -exec rm -rf {} +
+
+RUN systemctl unmask \
+    systemd-udevd.service \
+    systemd-udevd-kernel.socket \
+    systemd-udevd-control.socket \
+    systemd-modules-load.service \
+    sys-kernel-config.mount \
+    sys-kernel-debug.mount \
+    sys-fs-fuse-connections.mount \
+    systemd-remount-fs.service \
+    getty.target \
+    systemd-logind.service \
+    systemd-vconsole-setup.service \
+    systemd-timesyncd.service && \
+    systemctl enable \
+    systemd-udevd.service \
+    systemd-modules-load.service \
+    getty@tty1.service \
+    systemd-logind.service \
+    ssh.service \
+    rsyslog.service \
+    auditd.service
 
 # --- 14. Systemd-compatible boot (Warewulf) ---
 #STOPSIGNAL SIGRTMIN+3
