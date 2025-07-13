@@ -214,7 +214,6 @@ jobs:
           echo "SLURM_VERSION=${TARGET_SLURM_VERSION}" >> $GITHUB_OUTPUT
           echo "NVIDIA_INSTALL_ENABLED=${IS_NVIDIA_ENABLED}" >> $GITHUB_OUTPUT
           echo "NVIDIA_DRIVER_URL=${NVIDIA_DRIVER_URL}" >> $GITHUB_OUTPUT
-          echo "FIRSTBOOT_ENABLED=${FIRSTBOOT_ENABLED}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
       - name: 🏷️ Generate Docker Tag Name
