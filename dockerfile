@@ -10,6 +10,7 @@ ARG DISABLE_AUTOLOGIN
 ARG NVIDIA_INSTALL_ENABLED
 ARG NVIDIA_DRIVER_URL
 ARG FIRSTBOOT_ENABLED
+ARG KERNEL_INSTALL_ENABLED
 
 # --- 0. Set root user ---
 USER root
@@ -120,12 +121,15 @@ RUN apt-get update && apt-get install -y \
     rrdtool \
     lua5.3 \
     dkms \
-    munge \
-    linux-image-${KERNEL_VERSION} \
-    linux-headers-${KERNEL_VERSION} \
-    linux-modules-${KERNEL_VERSION} \
-    linux-modules-extra-${KERNEL_VERSION} && \
-    ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build && \
+    munge && \
+    if [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
+        apt-get install -y \
+            linux-image-${KERNEL_VERSION} \
+            linux-headers-${KERNEL_VERSION} \
+            linux-modules-${KERNEL_VERSION} \
+            linux-modules-extra-${KERNEL_VERSION} && \
+        ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build; \
+    fi && \
     mkdir -p /var/log/journal && \
     systemd-tmpfiles --create --prefix /var/log/journal && \
     systemctl mask \
@@ -168,8 +172,8 @@ RUN rm -rf /usr/share/xml/scap/ssg/content && \
     apt-get remove -y openscap-scanner libopenscap25t64 && \
     apt-get autoremove -y 
 
-# --- 8. Install NVIDIA Driver if enabled ---
-RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ]; then \
+# --- 8. Install NVIDIA Driver if enabled (requires kernel installation) ---
+RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ] && [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
         apt-get update && apt-get install -y \
             build-essential \
             pkg-config \
@@ -259,8 +263,10 @@ RUN systemctl enable \
     ssh.service \
     auditd.service
 
-# --- 12. Generate Initramfs for Selected Kernel ---
-RUN update-initramfs -u -k "$KERNEL_VERSION"
+# --- 12. Generate Initramfs for Selected Kernel (if kernel is installed) ---
+RUN if [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
+        update-initramfs -u -k "$KERNEL_VERSION"; \
+    fi
 	
 # --- 13. Final Cleanup ---
 RUN apt-mark manual libvulkan1 mesa-vulkan-drivers libglvnd0 && \
