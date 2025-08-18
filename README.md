@@ -95,6 +95,30 @@ This project includes a GitHub Actions workflow: `.github/workflows/deploy-warew
 * Logs into Docker Hub using stored GitHub Secrets
 * Pushes the image with descriptive tagging
 
+### 🎛️ Build Configuration Options
+
+The GitHub Actions workflow provides several build-time options that you can configure when manually triggering the build:
+
+![GitHub Actions Build Options](slurmd-actions.png)
+
+**Available Options:**
+- **Kernel Installation**: Choose whether to include a specific Linux kernel
+- **NVIDIA Support**: Enable/disable NVIDIA driver installation
+- **Slurm Version**: Select specific Slurm version or use latest
+- **Console Autologin**: Enable root autologin for debugging
+- **Firstboot Service**: Enable Ansible playbook execution on first boot
+
+### 🍴 Forking for Custom Versions
+
+**Important:** If you want to customize this image for your own environment or requirements, please **fork this repository** rather than using it directly. This allows you to:
+
+- Modify build parameters for your specific needs
+- Add custom packages or configurations
+- Maintain your own version control
+- Customize the CI/CD pipeline for your infrastructure
+
+Most of the information needed to get started is already documented in this README, including the required GitHub Secrets setup and workflow configuration.
+
 ### ✅ Setting Up GitHub Secrets
 
 To enable pushing to your Docker Hub:
