@@ -11,7 +11,7 @@ on:
         required: false
         default: '0'
       KERNEL_VERSION_OVERRIDE:
-        description: 'Specific kernel version (e.g., 6.8.0-31-generic). Use "0" or "none" for default kernel.'
+        description: 'Specific kernel version (e.g., 6.8.0-31-generic). Use "0" for default kernel, "none" for no kernel installation.'
         required: false
         default: '0'
       DISABLE_AUTOLOGIN:
@@ -116,7 +116,13 @@ jobs:
           elif [ -n "$VAR_KERNEL_VERSION" ] && [ "$VAR_KERNEL_VERSION" != "0" ]; then
             KERNEL_VERSION_OVERRIDE="$VAR_KERNEL_VERSION"
           fi
-          if [ "$KERNEL_VERSION_OVERRIDE" != "0" ]; then
+          
+          # Check if kernel installation should be enabled
+          if [ "$KERNEL_VERSION_OVERRIDE" = "none" ]; then
+            echo "🎯 Kernel installation DISABLED (no kernel option selected)"
+            echo "KERNEL_INSTALL_ENABLED=false" >> $GITHUB_OUTPUT
+            echo "KERNEL_VERSION=none" >> $GITHUB_OUTPUT
+          elif [ "$KERNEL_VERSION_OVERRIDE" != "0" ]; then
             TARGET_KERNEL_VERSION="$KERNEL_VERSION_OVERRIDE"
             echo "🎯 Target Kernel Version is specific: $TARGET_KERNEL_VERSION"
             echo "🔎 Verifying kernel packages exist in Ubuntu 24.04 apt repository..."
@@ -134,6 +140,7 @@ jobs:
               exit 1
             fi
             echo "✅ Verified that '$IMAGE_PKG' and '$HEADERS_PKG' are available."
+            echo "KERNEL_INSTALL_ENABLED=true" >> $GITHUB_OUTPUT
             echo "KERNEL_VERSION=${TARGET_KERNEL_VERSION}" >> $GITHUB_OUTPUT
           else
             echo "🎯 Target Kernel Version is latest available from apt (linux-image-generic)..."
@@ -156,6 +163,7 @@ jobs:
             apt-cache policy "$KERNEL" | grep -q "Candidate:" || { echo "❌ ERROR: Kernel package '$KERNEL' not found."; exit 1; }
 
             echo "✅ Detected latest kernel version: $KERNEL_PKG"
+            echo "KERNEL_INSTALL_ENABLED=true" >> $GITHUB_OUTPUT
             echo "KERNEL_VERSION=$KERNEL_PKG" >> $GITHUB_OUTPUT
           fi
 
@@ -184,6 +192,13 @@ jobs:
           if [ -n "$INPUT_NVIDIA_ENABLED" ]; then ENABLED_VAL="$INPUT_NVIDIA_ENABLED";
           elif [ -n "$VAR_NVIDIA_ENABLED" ]; then ENABLED_VAL="$VAR_NVIDIA_ENABLED"; fi
           if [ "$(lower "$ENABLED_VAL")" = "1" ] || [ "$(lower "$ENABLED_VAL")" = "true" ]; then IS_NVIDIA_ENABLED=true; fi
+          
+          # Check if kernel installation is enabled (NVIDIA requires kernel headers)
+          KERNEL_INSTALL_ENABLED_VAL="$(grep '^KERNEL_INSTALL_ENABLED=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          if [ "$IS_NVIDIA_ENABLED" = "true" ] && [ "$KERNEL_INSTALL_ENABLED_VAL" != "true" ]; then
+            echo "⚠️  WARNING: NVIDIA installation requested but kernel installation is disabled. Disabling NVIDIA installation."
+            IS_NVIDIA_ENABLED=false
+          fi
           
           NVIDIA_DRIVER_URL="0"
           if [ "$IS_NVIDIA_ENABLED" = "true" ]; then
@@ -214,6 +229,15 @@ jobs:
           echo "SLURM_VERSION=${TARGET_SLURM_VERSION}" >> $GITHUB_OUTPUT
           echo "NVIDIA_INSTALL_ENABLED=${IS_NVIDIA_ENABLED}" >> $GITHUB_OUTPUT
           echo "NVIDIA_DRIVER_URL=${NVIDIA_DRIVER_URL}" >> $GITHUB_OUTPUT
+          
+          echo -e "\n📋 Final Configuration Summary:"
+          echo "   SLURM_VERSION: ${TARGET_SLURM_VERSION}"
+          echo "   KERNEL_INSTALL_ENABLED: $(grep '^KERNEL_INSTALL_ENABLED=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          echo "   KERNEL_VERSION: $(grep '^KERNEL_VERSION=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          echo "   NVIDIA_INSTALL_ENABLED: ${IS_NVIDIA_ENABLED}"
+          echo "   DISABLE_AUTOLOGIN: $(grep '^DISABLE_AUTOLOGIN=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          echo "   FIRSTBOOT_ENABLED: $(grep '^FIRSTBOOT_ENABLED=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          
           cat $GITHUB_OUTPUT
 
       - name: 🏷️ Generate Docker Tag Name
@@ -221,16 +245,17 @@ jobs:
         run: |
           SLURM_VER="${{ steps.config.outputs.SLURM_VERSION }}"
           KERNEL_VER_RAW="${{ steps.config.outputs.KERNEL_VERSION }}"
+          KERNEL_INSTALL_ENABLED="${{ steps.config.outputs.KERNEL_INSTALL_ENABLED }}"
           NVIDIA_ENABLED="${{ steps.config.outputs.NVIDIA_INSTALL_ENABLED }}"
           NVIDIA_URL="${{ steps.config.outputs.NVIDIA_DRIVER_URL }}"
 
           # Slugify Slurm version
           SLURM_VER=$(echo "$SLURM_VER" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
 
-          # If kernel is "none", skip kernel/NVIDIA parts
-          if [ "$KERNEL_VER_RAW" = "none" ]; then
-            TAG_NAME="slurm-${SLURM_VER}"
-            echo "🔖 Kernel version is 'none'; skipping kernel and NVIDIA from tag."
+          # If kernel installation is disabled, skip kernel/NVIDIA parts
+          if [ "$KERNEL_INSTALL_ENABLED" = "false" ]; then
+            TAG_NAME="slurm-${SLURM_VER}-no-kernel"
+            echo "🔖 Kernel installation disabled; using 'no-kernel' tag."
           else
             KERNEL_VER=$(echo "U24.04-$KERNEL_VER_RAW" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
             TAG_NAME="${KERNEL_VER}-slurm-${SLURM_VER}"
@@ -255,6 +280,7 @@ jobs:
             --build-arg NVIDIA_INSTALL_ENABLED=${{ steps.config.outputs.NVIDIA_INSTALL_ENABLED }} \
             --build-arg NVIDIA_DRIVER_URL=${{ steps.config.outputs.NVIDIA_DRIVER_URL }} \
             --build-arg FIRSTBOOT_ENABLED=${{ steps.config.outputs.FIRSTBOOT_ENABLED }} \
+            --build-arg KERNEL_INSTALL_ENABLED=${{ steps.config.outputs.KERNEL_INSTALL_ENABLED }} \
             -t ${{ secrets.DOCKER_HUB_REPO }}:${{ steps.taggen.outputs.TAG_NAME }} .
 
       - name: 🚀 Login to DockerHub
