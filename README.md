@@ -1,56 +1,99 @@
 <img src="https://www.ualberta.ca/en/toolkit/media-library/homepage-assets/ua_logo_green_rgb.png" alt="University of Alberta Logo" width="50%" />
 
-# Warewulf Ceph Node Image
+# Warewulf Slurmd Node Image
 
-[![CI/CD](https://github.com/ualberta-rcg/warewulf-ceph/actions/workflows/deploy-warewulf-ceph.yml/badge.svg)](https://github.com/ualberta-rcg/warewulf-ceph/actions/workflows/deploy-warewulf-ceph.yml)
-![Docker Pulls](https://img.shields.io/docker/pulls/rkhoja/warewulf-ceph?style=flat-square)
-![Docker Image Size](https://img.shields.io/docker/image-size/rkhoja/warewulf-ceph/latest)
+[![CI/CD](https://github.com/ualberta-rcg/warewulf-slurmd/actions/workflows/deploy-warewulf-slurmd.yml/badge.svg)](https://github.com/ualberta-rcg/warewulf-slurmd/actions/workflows/deploy-warewulf-slurmd.yml)
+![Docker Pulls](https://img.shields.io/docker/pulls/rkhoja/warewulf-slurmd?style=flat-square)
+![Docker Image Size](https://img.shields.io/docker/image-size/rkhoja/warewulf-slurmd/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 **Maintained by:** Rahim Khoja ([khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)) & Karim Ali ([kali2@ualberta.ca](mailto:kali2@ualberta.ca))
 
 ## 🧰 Description
 
-This repository contains a hardened **Ceph node image** based on Ubuntu 22.04, built into a Docker container that is **Warewulf-compatible** and deployable on bare metal.
+This repository contains a hardened **Slurm compute node image** based on Ubuntu 24.04, built into a Docker container that is **Warewulf-compatible** and deployable on bare metal.
 
-It's primarily used for imaging and provisioning Ceph storage nodes using [Warewulf 4](https://warewulf.org) in high-performance computing and research storage clusters.
-
-The image includes the full Ceph stack (MON, MGR, OSD, MDS, RGW) and CIS security hardening using the SCAP Security Guide.
+It's primarily used for imaging and provisioning Slurm compute nodes using [Warewulf 4](https://warewulf.org) in high-performance computing clusters. The image includes the full Slurm daemon stack and CIS security hardening using the SCAP Security Guide.
 
 The image is automatically built and pushed to Docker Hub using GitHub Actions whenever changes are pushed to the `latest` branch.
 
 ## 📦 Docker Image
 
-**Docker Hub:** [rkhoja/warewulf-ceph:latest](https://hub.docker.com/r/rkhoja/warewulf-ceph)
+**Docker Hub:** [rkhoja/warewulf-slurmd:latest](https://hub.docker.com/r/rkhoja/warewulf-slurmd)
 
 ```bash
-docker pull rkhoja/warewulf-ceph:latest
-````
+docker pull rkhoja/warewulf-slurmd:latest
+```
 
 ## 🏗️ What's Inside
 
 This container includes:
 
-* **Ceph Quincy** (installed from official Ceph repos)
-* All Ceph daemons: `ceph-mon`, `ceph-mgr`, `ceph-osd`, `ceph-mds`, `radosgw`
-* SSH, NFS client, LVM, SMART tools, NVMe CLI
-* Filesystem utilities: Btrfs, XFS, ext4, ZFS-ready kernel modules (if required)
+* **Slurm 24.11+** (installed from custom DEB packages)
+* **Slurm daemon** (`slurmd`) and client tools
+* **Optional kernel installation** with configurable version
+* **Optional NVIDIA driver support** (requires kernel installation)
+* SSH, networking tools, monitoring utilities, debugging tools
 * SCAP CIS Level 2 hardening (automatically applied)
 * Systemd-based boot compatible with Warewulf PXE deployments
-* Pre-created `ceph` user (UID/GID 167) with correct directory permissions
+* Pre-created `wwuser` (UID/GID 1001) and `slurm` (UID/GID 999) users
 * `changeme` root password (change in production!)
 
-**Ceph** ([docs](https://docs.ceph.com/en/latest/)) is ready for manual cluster bootstrapping or integration with `cephadm`.
+**Slurm** ([docs](https://slurm.schedmd.com/)) is ready for integration with existing Slurm clusters.
+
+## 🚀 Build Options
+
+The image supports several build-time configurations:
+
+### **Kernel Installation**
+- **With Kernel** (default): Installs specific Linux kernel version with headers and modules
+- **No Kernel**: Skips kernel installation for use with host kernel or different kernel management
+
+### **NVIDIA Support**
+- **Enabled**: Installs NVIDIA drivers (requires kernel installation)
+- **Disabled**: No NVIDIA components (faster builds, smaller images)
+
+### **Slurm Version**
+- **Latest**: Automatically detects and uses latest stable Slurm release
+- **Specific**: Override with exact version (e.g., `24-11-6-1`)
+
+### **Autologin & Firstboot**
+- **Console Autologin**: Optional root autologin for debugging
+- **Firstboot Service**: Optional Ansible playbook execution on first boot
+
+## 🏷️ Docker Tags
+
+Images are tagged with a descriptive naming scheme:
+
+**With Kernel + NVIDIA:**
+```bash
+u24-6.8.0-31-slurm-24.11.6-1-nv570.148
+# Ubuntu 24.04 + Kernel 6.8.0-31 + Slurm 24.11.6-1 + NVIDIA 570.148
+```
+
+**With Kernel Only:**
+```bash
+u24-6.8.0-31-slurm-24.11.6-1
+# Ubuntu 24.04 + Kernel 6.8.0-31 + Slurm 24.11.6-1
+```
+
+**No Kernel:**
+```bash
+slurm-24.11.6-1
+# Slurm 24.11.6-1 only (no kernel, no NVIDIA)
+```
 
 ## 🛠️ GitHub Actions - CI/CD Pipeline
 
-This project includes a GitHub Actions workflow: `.github/workflows/deploy-warewulf-ceph.yml`.
+This project includes a GitHub Actions workflow: `.github/workflows/deploy-warewulf-slurmd.yml`.
 
 ### 🔄 What It Does
 
-* Builds the Docker image from the `Dockerfile`
+* Builds the Docker image from the `Dockerfile` with configurable options
+* Automatically detects latest Slurm and kernel versions
+* Generates appropriate Docker tags based on configuration
 * Logs into Docker Hub using stored GitHub Secrets
-* Pushes the image tagged as the current branch (usually `latest`)
+* Pushes the image with descriptive tagging
 
 ### ✅ Setting Up GitHub Secrets
 
@@ -59,21 +102,16 @@ To enable pushing to your Docker Hub:
 1. Go to your fork's GitHub repo → **Settings** → **Secrets and variables** → **Actions**
 2. Add the following:
 
-   * `DOCKER_HUB_REPO` → your Docker Hub repo. In this case: *rkhoja/warewulf-ceph*
+   * `DOCKER_HUB_REPO` → your Docker Hub repo. In this case: *rkhoja/warewulf-slurmd*
    * `DOCKER_HUB_USER` → your Docker Hub username
    * `DOCKER_HUB_TOKEN` → create a [Docker Hub access token](https://hub.docker.com/settings/security)
 
 ### 🚀 Manual Trigger & Auto-Build
 
-* Manual: Run the workflow from the **Actions** tab with **Run workflow** (enabled via `workflow_dispatch`).
+* **Manual**: Run the workflow from the **Actions** tab with **Run workflow** (enabled via `workflow_dispatch`)
+* **Automatic**: Any push to the `latest` branch triggers the CI/CD pipeline
 
-* Automatic: Any push to the `latest` branch triggers the CI/CD pipeline.
-
-* **Recommended branching model:**
-
-  * Work and test in `main`
-  * Merge or fast-forward `main` to `latest` to trigger a production build
-
+**Recommended branching model:**
 ```bash
 git checkout latest
 git merge main
@@ -85,16 +123,19 @@ git push origin latest
 Once you have Warewulf 4 setup on your control node:
 
 ```bash
-wwctl image import --build --force docker://rkhoja/warewulf-ceph:latest ceph
+# Import with kernel and NVIDIA support
+wwctl image import --build --force docker://rkhoja/warewulf-slurmd:u24-6.8.0-31-slurm-24.11.6-1-nv570.148 slurmd-gpu
+
+# Import with kernel only (no NVIDIA)
+wwctl image import --build --force docker://rkhoja/warewulf-slurmd:u24-6.8.0-31-slurm-24.11.6-1 slurmd-cpu
+
+# Import without kernel (use host kernel)
+wwctl image import --build --force docker://rkhoja/warewulf-slurmd:slurm-24.11.6-1 slurmd-minimal
 ```
 
 ### Warewulf Configuration
 
-Warewulf overlays included are examples. It assumes only one IP for each node. Profiles were configured in Warewulf as follows:
-
---------------------------------------------------------------------------------
-**PUT STUFF HERE**
---------------------------------------------------------------------------------
+The image includes a firstboot service that can run Ansible playbooks for post-deployment configuration. Place your playbooks in `/etc/ansible/playbooks/*.yaml` on the deployed nodes.
 
 ## 🤝 Support
 
