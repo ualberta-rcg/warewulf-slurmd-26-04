@@ -221,20 +221,29 @@ RUN mkdir -p /slurm-debs && \
         debver=$(echo "$SLURM_VERSION" | sed 's/^\([0-9]*\)-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)$/\1.\2.\3-\4/') && \
         echo "🧹 Keeping only *_${debver}_*.deb packages..." && \
         find /slurm-debs -type f -name '*.deb' ! -name "*_${debver}_*.deb" -delete; \
-    fi
-
-# Keep only .debs that match the wanted packages
-RUN mkdir -p /tmp/keep-debs && \
-    for pkg in slurm-smd_ slurm-smd-slurmd slurm-smd-client \
-               slurm-smd-libpmi0 slurm-smd-libpmi2-0 \
-               slurm-smd-libnss-slurm slurm-smd-libpam-slurm-adopt \
-               slurm-smd-doc; do \
-        mv /slurm-debs/$pkg* /tmp/keep-debs/ 2>/dev/null || true; \
+    fi && \
+    echo "🔎 Filtering unwanted packages..." && \
+    EXCLUDE_KEYWORDS="slurmctld slurmrestd slurmdbd" && \
+    mkdir -p /tmp/keep-debs && \
+    for deb in /slurm-debs/*.deb; do \
+        skip=false; \
+        for keyword in $EXCLUDE_KEYWORDS; do \
+            if echo "$deb" | grep -q "$keyword"; then \
+                skip=true; \
+                break; \
+            fi; \
+        done; \
+        if [ "$skip" = false ]; then \
+            echo "✅ Keeping: $(basename "$deb")"; \
+            cp "$deb" /tmp/keep-debs/; \
+        else \
+            echo "🚫 Skipping: $(basename "$deb")"; \
+        fi; \
     done && \
     rm -rf /slurm-debs && \
     mv /tmp/keep-debs /slurm-debs
 
-RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y) 
+RUN dpkg -i /slurm-debs/*.deb || (echo "⚠️ dpkg failed, attempting fix..." && apt-get install -f -y)
 
 # --- 10. Configure Autologin based on DISABLE_AUTOLOGIN ---
 RUN if [ "$DISABLE_AUTOLOGIN" != "true" ]; then \
