@@ -12,15 +12,15 @@ ARG NVIDIA_DRIVER_URL
 ARG FIRSTBOOT_ENABLED
 ARG KERNEL_INSTALL_ENABLED
 
+# =============================================================================
+# USER & GROUP SETUP - Standardized across all Slurm services
+# =============================================================================
+
 # --- 0. Set root user ---
 USER root
 
 # --- 2. Set root password ---
 RUN echo "root:changeme" | chpasswd
-
-# =============================================================================
-# USER & GROUP SETUP - Standardized across all Slurm services
-# =============================================================================
 
 # --- 1. Create Slurm service user (UID 999) ---
 RUN groupadd -g 999 slurm && useradd -u 999 -g 999 -m -s /bin/bash slurm
@@ -28,17 +28,17 @@ RUN groupadd -g 999 slurm && useradd -u 999 -g 999 -m -s /bin/bash slurm
 # --- 2. Create Munge authentication user (UID 972) ---
 RUN groupadd -g 972 munge && useradd -u 972 -g 972 -m -s /sbin/nologin munge 
 
-# --- 3. Create wwuser user accounts (UID 1000) ---
-RUN groupadd -g 1000 wwgroup && \
-    useradd -u 1000 -m -d /local/home/wwuser -g wwgroup -G sudo,munge -s /bin/bash wwuser && \
+# --- 3. Create wwuser user accounts (UID 2000) ---
+RUN groupadd -g 2000 wwgroup && \
+    useradd -u 2000 -m -d /local/home/wwuser -g wwgroup -G sudo,munge -s /bin/bash wwuser && \
     echo "wwuser:wwpassword" | chpasswd
 
 # --- 4. Create slurmrest user for REST API (UID 971) ---
 RUN groupadd -g 971 slurmrest && useradd -u 971 -g 971 -m -s /bin/false slurmrest
 
-# --- 5. Create distributive.network user (UID 1001) ---
-RUN groupadd -g 1001 distgroup && \
-    useradd -u 1001 -m -d /local/home/dist -g distgroup -s /bin/bash dist
+# --- 5. Create distributive.network user (UID 2001) ---
+RUN groupadd -g 2001 distgroup && \
+    useradd -u 2001 -m -d /local/home/dist -g distgroup -s /bin/bash dist
 
 # --- 5. Install Core Tools, Debugging, and Dependencies ---
 RUN apt-get update && apt-get install -y \
