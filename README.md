@@ -4,7 +4,6 @@
 
 [![CI/CD](https://github.com/ualberta-rcg/warewulf-slurmd/actions/workflows/deploy-warewulf-slurmd.yml/badge.svg)](https://github.com/ualberta-rcg/warewulf-slurmd/actions/workflows/deploy-warewulf-slurmd.yml)
 ![Docker Pulls](https://img.shields.io/docker/pulls/rkhoja/warewulf-slurmd?style=flat-square)
-![Docker Image Size](https://img.shields.io/docker/image-size/rkhoja/warewulf-slurmd/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 **Maintained by:** Rahim Khoja ([khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)) & Karim Ali ([kali2@ualberta.ca](mailto:kali2@ualberta.ca))
