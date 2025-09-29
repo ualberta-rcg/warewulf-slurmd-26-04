@@ -217,7 +217,7 @@ jobs:
             if [ "$NVIDIA_VERSION_OVERRIDE" != "0" ]; then
               DRIVER_URL=$(echo "$RELEASES_JSON" | jq -r --arg ver "$NVIDIA_VERSION_OVERRIDE" --arg arch "$ARCH" '.[] | .driver_info[] | select(.release_version == $ver) | .runfile_url[$arch]' | head -n1)
             else
-              DRIVER_URL=$(echo "$RELEASES_JSON" | jq -r --arg arch "$ARCH" 'first(.[] | select(.type == "lts branch")) | .driver_info[0].runfile_url[$arch]')
+              DRIVER_URL=$(echo "$RELEASES_JSON" | jq -r --arg arch "$ARCH" 'first(.[] | select(.type == "production branch")) | .driver_info[0].runfile_url[$arch]')
             fi
 
             [ -z "$DRIVER_URL" ] || [ "$DRIVER_URL" = "null" ] && { echo "❌ ERROR: Could not determine a valid NVIDIA driver URL for version '$NVIDIA_VERSION_OVERRIDE' and arch '$ARCH'."; exit 1; }
