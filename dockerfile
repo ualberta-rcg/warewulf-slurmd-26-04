@@ -96,6 +96,7 @@ RUN apt-get update && apt-get install -y \
     gnupg-agent \
     ignition \
     gdisk \
+    initramfs-tools \
     xfsprogs \
     rsyslog \
     logrotate \
