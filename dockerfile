@@ -211,6 +211,7 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ] && [ "$KERNEL_INSTALL_ENABLED" = "
                           --no-nouveau-check \
                           --no-systemd \
                           --no-check-for-alternate-installs \
+                          --kernel-module-type=open \
                           --kernel-name=${KERNEL_VERSION} \
                           --kernel-source-path=/lib/modules/${KERNEL_VERSION}/build \
                           --x-prefix=/usr \
