@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-debs:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
 
     outputs:
       version: ${{ steps.vars.outputs.version }}
