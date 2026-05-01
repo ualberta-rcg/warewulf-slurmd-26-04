@@ -148,8 +148,7 @@ RUN apt-get update && apt-get install -y \
         apt-get install -y \
             linux-image-${RESOLVED_KERNEL_VERSION} \
             linux-headers-${RESOLVED_KERNEL_VERSION} \
-            linux-modules-${RESOLVED_KERNEL_VERSION} \
-            linux-modules-extra-${RESOLVED_KERNEL_VERSION} && \
+            linux-modules-${RESOLVED_KERNEL_VERSION} && \
         ln -s /usr/src/linux-headers-${RESOLVED_KERNEL_VERSION} /lib/modules/${RESOLVED_KERNEL_VERSION}/build; \
     fi && \
     mkdir -p /var/log/journal && \
