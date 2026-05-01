@@ -126,22 +126,8 @@ jobs:
             echo "KERNEL_VERSION=none" >> $GITHUB_OUTPUT
           elif [ "$KERNEL_VERSION_OVERRIDE" != "0" ]; then
             TARGET_KERNEL_VERSION="$KERNEL_VERSION_OVERRIDE"
-            echo "🎯 Target Kernel Version is specific: $TARGET_KERNEL_VERSION"
-            echo "🔎 Verifying kernel packages exist in Ubuntu 26.04 apt repository..."
-            sudo apt-get update -qq
-
-            IMAGE_PKG="linux-image-${TARGET_KERNEL_VERSION}"
-            HEADERS_PKG="linux-headers-${TARGET_KERNEL_VERSION}"
-
-            if ! apt-cache policy "$IMAGE_PKG" | grep -q "Candidate:"; then
-              echo "❌ ERROR: Kernel image package '$IMAGE_PKG' not found in apt repositories."
-              exit 1
-            fi
-            if ! apt-cache policy "$HEADERS_PKG" | grep -q "Candidate:"; then
-              echo "❌ ERROR: Kernel headers package '$HEADERS_PKG' not found in apt repositories."
-              exit 1
-            fi
-            echo "✅ Verified that '$IMAGE_PKG' and '$HEADERS_PKG' are available."
+            echo "🎯 Target Kernel Version override: $TARGET_KERNEL_VERSION"
+            echo "🔎 Dockerfile will resolve the newest matching generic kernel package."
             echo "KERNEL_INSTALL_ENABLED=true" >> $GITHUB_OUTPUT
             echo "KERNEL_VERSION=${TARGET_KERNEL_VERSION}" >> $GITHUB_OUTPUT
           else
