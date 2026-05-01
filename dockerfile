@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install -y \
     dbus \
     initramfs-tools \
     openscap-scanner \
-    libopenscap25t64 \
+    libopenscap33 \
     openscap-common \
     socat \
     conntrack \
