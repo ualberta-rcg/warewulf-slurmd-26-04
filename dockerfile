@@ -190,7 +190,7 @@ RUN export SSG_VERSION=$(curl -s https://api.github.com/repos/ComplianceAsCode/c
 
 # --- 6. Clean up SCAP content and scanner ---
 RUN rm -rf /usr/share/xml/scap/ssg/content && \
-    apt-get remove -y openscap-scanner libopenscap25t64 && \
+    apt-get remove -y openscap-scanner libopenscap33 && \
     apt-get autoremove -y 
 
 # --- 8. Install NVIDIA Driver if enabled (requires kernel installation) ---
