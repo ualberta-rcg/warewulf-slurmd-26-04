@@ -127,7 +127,7 @@ jobs:
           elif [ "$KERNEL_VERSION_OVERRIDE" != "0" ]; then
             TARGET_KERNEL_VERSION="$KERNEL_VERSION_OVERRIDE"
             echo "🎯 Target Kernel Version is specific: $TARGET_KERNEL_VERSION"
-            echo "🔎 Verifying kernel packages exist in Ubuntu 24.04 apt repository..."
+            echo "🔎 Verifying kernel packages exist in Ubuntu 26.04 apt repository..."
             sudo apt-get update -qq
 
             IMAGE_PKG="linux-image-${TARGET_KERNEL_VERSION}"
@@ -259,7 +259,7 @@ jobs:
             TAG_NAME="slurm-${SLURM_VER}-no-kernel"
             echo "🔖 Kernel installation disabled; using 'no-kernel' tag."
           else
-            KERNEL_VER=$(echo "U24.04-$KERNEL_VER_RAW" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
+            KERNEL_VER=$(echo "U26.04-$KERNEL_VER_RAW" | tr '.' '-' | tr '[:upper:]' '[:lower:]')
             TAG_NAME="${KERNEL_VER}-slurm-${SLURM_VER}"
 
             if [ "$NVIDIA_ENABLED" = "true" ]; then
