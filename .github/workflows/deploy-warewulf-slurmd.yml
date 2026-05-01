@@ -184,7 +184,7 @@ jobs:
           fi
           echo "🎯 Target Slurm Version: $TARGET_SLURM_VERSION"
           debver="$(echo "$TARGET_SLURM_VERSION" | sed 's/^\([0-9]*\)-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)$/\1.\2.\3-\4/')"
-          count=$(find "$GITHUB_WORKSPACE/slurm-debs" -type f -name "*_${debver}_*_u2404.deb" 2>/dev/null | wc -l)
+          count=$(find "$GITHUB_WORKSPACE/slurm-debs" -type f -name "*_${debver}_*_u2604.deb" 2>/dev/null | wc -l)
           [ "$count" -eq 0 ] && { echo "❌ ERROR: Slurm DEB packages for version $TARGET_SLURM_VERSION not found!"; exit 1; }
           echo "✅ Found $count matching DEB packages."
 
