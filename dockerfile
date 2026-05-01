@@ -138,12 +138,19 @@ RUN apt-get update && apt-get install -y \
     dkms \
     munge && \
     if [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
+        RESOLVED_KERNEL_VERSION=$(apt-cache search "^linux-image-${KERNEL_VERSION}" | \
+            awk -v prefix="linux-image-${KERNEL_VERSION}" 'index($1, prefix) == 1 && $1 ~ /-generic$/ { sub(/^linux-image-/, "", $1); print $1 }' | \
+            sort -V | \
+            tail -n1) && \
+        [ -n "$RESOLVED_KERNEL_VERSION" ] || { echo "No generic kernel package found starting with '${KERNEL_VERSION}'"; exit 1; } && \
+        echo "$RESOLVED_KERNEL_VERSION" > /etc/warewulf-kernel-version && \
+        echo "Resolved kernel version: $RESOLVED_KERNEL_VERSION" && \
         apt-get install -y \
-            linux-image-${KERNEL_VERSION} \
-            linux-headers-${KERNEL_VERSION} \
-            linux-modules-${KERNEL_VERSION} \
-            linux-modules-extra-${KERNEL_VERSION} && \
-        ln -s /usr/src/linux-headers-${KERNEL_VERSION} /lib/modules/${KERNEL_VERSION}/build; \
+            linux-image-${RESOLVED_KERNEL_VERSION} \
+            linux-headers-${RESOLVED_KERNEL_VERSION} \
+            linux-modules-${RESOLVED_KERNEL_VERSION} \
+            linux-modules-extra-${RESOLVED_KERNEL_VERSION} && \
+        ln -s /usr/src/linux-headers-${RESOLVED_KERNEL_VERSION} /lib/modules/${RESOLVED_KERNEL_VERSION}/build; \
     fi && \
     mkdir -p /var/log/journal && \
     systemd-tmpfiles --create --prefix /var/log/journal && \
@@ -189,6 +196,7 @@ RUN rm -rf /usr/share/xml/scap/ssg/content && \
 
 # --- 8. Install NVIDIA Driver if enabled (requires kernel installation) ---
 RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ] && [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
+        RESOLVED_KERNEL_VERSION=$(cat /etc/warewulf-kernel-version) && \
         apt-get update && apt-get install -y \
             build-essential \
             pkg-config \
@@ -212,8 +220,8 @@ RUN if [ "$NVIDIA_INSTALL_ENABLED" = "true" ] && [ "$KERNEL_INSTALL_ENABLED" = "
                           --no-systemd \
                           --no-check-for-alternate-installs \
                           --kernel-module-type=open \
-                          --kernel-name=${KERNEL_VERSION} \
-                          --kernel-source-path=/lib/modules/${KERNEL_VERSION}/build \
+                          --kernel-name=${RESOLVED_KERNEL_VERSION} \
+                          --kernel-source-path=/lib/modules/${RESOLVED_KERNEL_VERSION}/build \
                           --x-prefix=/usr \
                           --x-module-path=/usr/lib/xorg/modules \
                           --x-library-path=/usr/lib && \
@@ -290,7 +298,8 @@ RUN systemctl enable \
 
 # --- 12. Generate Initramfs for Selected Kernel (if kernel is installed) ---
 RUN if [ "$KERNEL_INSTALL_ENABLED" = "true" ]; then \
-        update-initramfs -u -k "$KERNEL_VERSION"; \
+        RESOLVED_KERNEL_VERSION=$(cat /etc/warewulf-kernel-version) && \
+        update-initramfs -u -k "$RESOLVED_KERNEL_VERSION"; \
     fi
 	
 # --- 13. Final Cleanup ---
