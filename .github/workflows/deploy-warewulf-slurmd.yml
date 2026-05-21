@@ -127,24 +127,25 @@ jobs:
           else
             echo "🎯 Resolving best matching kernel version from ubuntu:26.04 apt repositories..."
             
-            RESOLVED_KERNEL_VERSION=$(docker run -i -e KERNEL_VERSION_OVERRIDE="$KERNEL_VERSION_OVERRIDE" --rm ubuntu:26.04 sh <<'            EOF'
-              apt-get update -qq
-              if [ "$KERNEL_VERSION_OVERRIDE" = "0" ]; then
-                GENERIC_VERSION=$(apt-cache policy linux-image-generic | grep Candidate | awk '{print $2}')
-                if [ -n "$GENERIC_VERSION" ]; then
-                  apt-cache show "linux-image-generic=${GENERIC_VERSION}" | \
-                    grep -E '^Depends:' | \
-                    sed -E 's/.*linux-image-([0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic).*/\1/' | \
-                    head -n1
-                fi
-              else
-                apt-cache search "^linux-image-${KERNEL_VERSION_OVERRIDE}" | \
-                  awk -v prefix="linux-image-${KERNEL_VERSION_OVERRIDE}" 'index($1, prefix) == 1 && $1 ~ /-generic$/ { sub(/^linux-image-/, "", $1); print $1 }' | \
-                  sort -V | \
-                  tail -n1
-              fi
-            EOF
-            )
+            python3 -c '
+import os
+override = os.environ.get("KERNEL_VERSION_OVERRIDE", "0")
+if override == "0":
+    script = r"""apt-get update -qq
+GENERIC_VERSION=$(apt-cache policy linux-image-generic | grep Candidate | awk "{print \$2}")
+if [ -n "$GENERIC_VERSION" ]; then
+  apt-cache show "linux-image-generic=${GENERIC_VERSION}" | grep -E "^Depends:" | sed -E "s/.*linux-image-([0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic).*/\1/" | head -n1
+fi
+"""
+else:
+    script = fr"""apt-get update -qq
+apt-cache search "^linux-image-{override}" | awk -v prefix="linux-image-{override}" "index(\$1, prefix) == 1 && \$1 ~ /-generic\$/ {{ sub(/^linux-image-/, \"\", \$1); print \$1 }}" | sort -V | tail -n1
+"""
+with open("/tmp/resolve_kernel.sh", "w") as f:
+    f.write(script)
+'
+            RESOLVED_KERNEL_VERSION=$(docker run -i --rm ubuntu:26.04 sh < /tmp/resolve_kernel.sh)
+            rm -f /tmp/resolve_kernel.sh
 
             if [ -z "$RESOLVED_KERNEL_VERSION" ]; then
               echo "❌ ERROR: Failed to resolve kernel version inside ubuntu:26.04 container for override '$KERNEL_VERSION_OVERRIDE'."
