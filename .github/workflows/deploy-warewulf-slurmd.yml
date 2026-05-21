@@ -124,35 +124,41 @@ jobs:
             echo "🎯 Kernel installation DISABLED (no kernel option selected)"
             echo "KERNEL_INSTALL_ENABLED=false" >> $GITHUB_OUTPUT
             echo "KERNEL_VERSION=none" >> $GITHUB_OUTPUT
-          elif [ "$KERNEL_VERSION_OVERRIDE" != "0" ]; then
-            TARGET_KERNEL_VERSION="$KERNEL_VERSION_OVERRIDE"
-            echo "🎯 Target Kernel Version override: $TARGET_KERNEL_VERSION"
-            echo "🔎 Dockerfile will resolve the newest matching generic kernel package."
-            echo "KERNEL_INSTALL_ENABLED=true" >> $GITHUB_OUTPUT
-            echo "KERNEL_VERSION=${TARGET_KERNEL_VERSION}" >> $GITHUB_OUTPUT
           else
-            echo "🎯 Target Kernel Version is latest available from apt (linux-image-generic)..."
-            sudo apt-get update -qq
+            echo "🎯 Resolving best matching kernel version from ubuntu:26.04 apt repositories..."
+            
+            RESOLVED_KERNEL_VERSION=$(docker run -i -e KERNEL_VERSION_OVERRIDE="$KERNEL_VERSION_OVERRIDE" --rm ubuntu:26.04 sh <<'EOF'
+apt-get update -qq
+if [ "$KERNEL_VERSION_OVERRIDE" = "0" ]; then
+  GENERIC_VERSION=$(apt-cache policy linux-image-generic | grep Candidate | awk '{print $2}')
+  if [ -n "$GENERIC_VERSION" ]; then
+    apt-cache show "linux-image-generic=${GENERIC_VERSION}" | \
+      grep -E '^Depends:' | \
+      sed -E 's/.*linux-image-([0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic).*/\1/' | \
+      head -n1
+  fi
+else
+  apt-cache search "^linux-image-${KERNEL_VERSION_OVERRIDE}" | \
+    awk -v prefix="linux-image-${KERNEL_VERSION_OVERRIDE}" 'index($1, prefix) == 1 && $1 ~ /-generic$/ { sub(/^linux-image-/, "", $1); print $1 }' | \
+    sort -V | \
+    tail -n1
+fi
+EOF
+)
 
-            GENERIC_VERSION=$(apt-cache policy linux-image-generic | grep Candidate | awk '{print $2}')
-            [ -z "$GENERIC_VERSION" ] && { echo "❌ ERROR: Could not find version of linux-image-generic."; exit 1; }
+            if [ -z "$RESOLVED_KERNEL_VERSION" ]; then
+              echo "❌ ERROR: Failed to resolve kernel version inside ubuntu:26.04 container for override '$KERNEL_VERSION_OVERRIDE'."
+              exit 1
+            fi
 
-            # Extract real kernel version from available modules (after a dry-run install)
-            KERNEL_PKG=$(apt-cache show "linux-image-generic=$GENERIC_VERSION" \
-              | grep -E '^Depends:' \
-              | sed -E 's/.*linux-image-([0-9]+\.[0-9]+\.[0-9]+-[0-9]+-generic).*/\1/' \
-              | head -n1)
-            [ -z "$KERNEL_PKG" ] && { echo "❌ ERROR: Could not parse real kernel package name."; exit 1; }
-
-            KERNEL="linux-image-$KERNEL_PKG"
-            echo "✅ Detected kernel package: $KERNEL"
-
-            # Optionally verify it exists
-            apt-cache policy "$KERNEL" | grep -q "Candidate:" || { echo "❌ ERROR: Kernel package '$KERNEL' not found."; exit 1; }
-
-            echo "✅ Detected latest kernel version: $KERNEL_PKG"
+            echo "✅ Detected/Resolved kernel version package: $RESOLVED_KERNEL_VERSION"
+            
+            # Strip the "-generic" suffix
+            KERNEL_VERSION_STRIPPED="${RESOLVED_KERNEL_VERSION%-generic}"
+            echo "✅ Kernel version with '-generic' removed: $KERNEL_VERSION_STRIPPED"
+            
             echo "KERNEL_INSTALL_ENABLED=true" >> $GITHUB_OUTPUT
-            echo "KERNEL_VERSION=$KERNEL_PKG" >> $GITHUB_OUTPUT
+            echo "KERNEL_VERSION=$KERNEL_VERSION_STRIPPED" >> $GITHUB_OUTPUT
           fi
 
           echo -e "\n## 4. Processing Slurm Configuration & Verifying DEBs ##"
